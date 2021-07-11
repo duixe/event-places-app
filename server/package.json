@@ -1,0 +1,17 @@
+{
+  "name": "letours",
+  "version": "1.0.0",
+  "description": "A tour guide app in Ghana",
+  "main": "app.js",
+  "scripts": {
+    "start:dev": "nodemon server.js",
+    "start:prod": "NODE_ENV=production nodemon server.js"
+  },
+  "author": "Emmanuel Sunday Akomaning",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "morgan": "^1.10.0"
+  }
+}
