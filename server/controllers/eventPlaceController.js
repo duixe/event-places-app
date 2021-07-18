@@ -3,15 +3,23 @@ const Place = require('../models/eventPlaceModel');
 exports.getAllPlaces = async (req, res) => {
   try {
     // BUILD QUERY
+    //FILTERING
     const queryObj = { ...req.query };
     const excludedStrings = ['page', 'sort', 'limit', 'fields'];
     excludedStrings.forEach((el) => delete queryObj[el]);
 
     let queryStr = JSON.stringify(queryObj);
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    console.log(JSON.parse(queryStr));
 
-    const query = Place.find(JSON.parse(queryStr));
+    let query = Place.find(JSON.parse(queryStr));
+
+    //SORTING
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-created_at');
+    }
 
     // EXECUTE QUERY
     const eventPlaces = await query;
