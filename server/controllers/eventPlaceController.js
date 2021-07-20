@@ -109,3 +109,47 @@ exports.deletePlace = async (req, res) => {
     });
   }
 };
+
+exports.getPlaceStats = async (req, res) => {
+  try {
+    const stats = await Place.aggregate([
+      {
+        $match: { averageRatings: { $gte: 4 } },
+      },
+      {
+        $group: {
+          // _id: null,
+          _id: '$averageRatings',
+          numOfPlaces: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$averageRatings' },
+          avgPrice: { $avg: 'price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      // {
+      //   $project: {
+      //     _id: 0,
+      //   },
+      // },
+      {
+        // sort the aggregations by {avgPrice or avgRating..etc} key stated above in ascending order (1)
+        // $sort: { avgRating: 1 },
+        $sort: { avgPrice: 1 },
+      },
+    ]);
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        stats,
+      },
+    });
+  } catch (error) {
+    res.status(204).json({
+      status: 'fail',
+      message: error,
+    });
+  }
+};
