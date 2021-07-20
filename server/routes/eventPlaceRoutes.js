@@ -10,10 +10,13 @@ router
   .route('/top-5-places')
   .get(eventPlaceController.aliasTopPlaces, eventPlaceController.getAllPlaces);
 
+router.route('/place-stats').get(eventPlaceController.getPlaceStats);
+
 router
   .route('/')
   .get(eventPlaceController.getAllPlaces)
   .post(eventPlaceController.createPlace);
+
 router
   .route('/:id')
   .get(eventPlaceController.getPlace)
