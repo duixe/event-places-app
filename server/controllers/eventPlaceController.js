@@ -1,4 +1,5 @@
 const Place = require('../models/eventPlaceModel');
+const APIFeatures = require('../utils/placesAPIFeature');
 
 exports.aliasTopPlaces = (req, res, next) => {
   req.query.limit = 10;
@@ -10,48 +11,13 @@ exports.aliasTopPlaces = (req, res, next) => {
 
 exports.getAllPlaces = async (req, res) => {
   try {
-    // BUILD QUERY
-    //FILTERING
-    const queryObj = { ...req.query };
-    const excludedStrings = ['page', 'sort', 'limit', 'fields'];
-    excludedStrings.forEach((el) => delete queryObj[el]);
-
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let query = Place.find(JSON.parse(queryStr));
-
-    //SORTING
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-created_at');
-    }
-
-    //SPECIFIC FIELDS
-    if (req.query.fields) {
-      const specificFields = req.query.fields.split(',').join(' ');
-      query = query.select(specificFields);
-    } else {
-      // Select everything except the '__v' field
-      query = query.select('-__v');
-    }
-
-    //PAGINATION
-    const pageNum = +req.query.page || 1;
-    const limitValue = +req.query.limit || 50;
-    const skipValue = (pageNum - 1) * limitValue;
-
-    query = query.skip(skipValue).limit(limitValue);
-
-    if (req.query.page) {
-      const totalPlaces = await Place.countDocuments();
-      if (skipValue >= totalPlaces) throw new Error('Page limit exceeded');
-    }
-
     // EXECUTE QUERY
-    const eventPlaces = await query;
+    const features = new APIFeatures(Place.find(), req.query)
+      .filter()
+      .sort()
+      .specificFields()
+      .paginate();
+    const eventPlaces = await features.query;
 
     // SEND RESPONSE
     res.status(200).json({
