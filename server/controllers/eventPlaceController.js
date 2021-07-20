@@ -1,5 +1,13 @@
 const Place = require('../models/eventPlaceModel');
 
+exports.aliasTopPlaces = (req, res, next) => {
+  req.query.limit = 10;
+  req.query.sort = '-averageRatings,price';
+  req.query.fields =
+    'name,price,averageRatings,summary,location,booked,maxSize,location';
+  next();
+};
+
 exports.getAllPlaces = async (req, res) => {
   try {
     // BUILD QUERY
@@ -19,6 +27,27 @@ exports.getAllPlaces = async (req, res) => {
       query = query.sort(sortBy);
     } else {
       query = query.sort('-created_at');
+    }
+
+    //SPECIFIC FIELDS
+    if (req.query.fields) {
+      const specificFields = req.query.fields.split(',').join(' ');
+      query = query.select(specificFields);
+    } else {
+      // Select everything except the '__v' field
+      query = query.select('-__v');
+    }
+
+    //PAGINATION
+    const pageNum = +req.query.page || 1;
+    const limitValue = +req.query.limit || 50;
+    const skipValue = (pageNum - 1) * limitValue;
+
+    query = query.skip(skipValue).limit(limitValue);
+
+    if (req.query.page) {
+      const totalPlaces = await Place.countDocuments();
+      if (skipValue >= totalPlaces) throw new Error('Page limit exceeded');
     }
 
     // EXECUTE QUERY

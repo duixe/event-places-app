@@ -7,6 +7,10 @@ const router = express.Router();
 // router.param('id', eventPlaceController.checkId);
 
 router
+  .route('/top-5-places')
+  .get(eventPlaceController.aliasTopPlaces, eventPlaceController.getAllPlaces);
+
+router
   .route('/')
   .get(eventPlaceController.getAllPlaces)
   .post(eventPlaceController.createPlace);
