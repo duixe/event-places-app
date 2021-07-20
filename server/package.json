@@ -1,7 +1,7 @@
 {
-  "name": "letours",
+  "name": "Event-Places",
   "version": "1.0.0",
-  "description": "A tour guide app in Ghana",
+  "description": "App that helps users search and book Event places in Ghana",
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
@@ -25,5 +25,8 @@
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.24.0",
     "prettier": "^2.3.2"
+  },
+  "engines": {
+    "node": ">=10.16.3"
   }
 }

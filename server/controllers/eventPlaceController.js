@@ -1,28 +1,23 @@
 const Place = require('../models/eventPlaceModel');
+const APIFeatures = require('../utils/placesAPIFeature');
+
+exports.aliasTopPlaces = (req, res, next) => {
+  req.query.limit = 10;
+  req.query.sort = '-averageRatings,price';
+  req.query.fields =
+    'name,price,averageRatings,summary,location,booked,maxSize,location';
+  next();
+};
 
 exports.getAllPlaces = async (req, res) => {
   try {
-    // BUILD QUERY
-    //FILTERING
-    const queryObj = { ...req.query };
-    const excludedStrings = ['page', 'sort', 'limit', 'fields'];
-    excludedStrings.forEach((el) => delete queryObj[el]);
-
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-
-    let query = Place.find(JSON.parse(queryStr));
-
-    //SORTING
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-created_at');
-    }
-
     // EXECUTE QUERY
-    const eventPlaces = await query;
+    const features = new APIFeatures(Place.find(), req.query)
+      .filter()
+      .sort()
+      .specificFields()
+      .paginate();
+    const eventPlaces = await features.query;
 
     // SEND RESPONSE
     res.status(200).json({
