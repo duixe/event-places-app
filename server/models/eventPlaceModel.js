@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const placeSchema = new mongoose.Schema(
   {
@@ -7,6 +8,7 @@ const placeSchema = new mongoose.Schema(
       required: [true, 'An Event Place must have a name'],
       unique: true,
     },
+    slug: String,
     maxSize: {
       type: Number,
       required: [true, 'Event place must maximum number of people'],
@@ -69,6 +71,17 @@ placeSchema.virtual('durationInWeeks').get(function () {
   return this.duration / 7;
 });
 
+// NB: document middleware that run before the .save() and .create()
+placeSchema.pre('save', function (next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+placeSchema.post('save', function (doc, next) {
+  console.log(doc);
+  // this.slug = slugify(this)
+  next();
+});
 const Place = mongoose.model('Place', placeSchema);
 
 module.exports = Place;
