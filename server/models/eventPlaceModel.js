@@ -7,11 +7,16 @@ const placeSchema = new mongoose.Schema(
       type: String,
       required: [true, 'An Event Place must have a name'],
       unique: true,
+      maxLength: [50, 'An Event Place name must not exceed 50 characters'],
+      minLength: [
+        10,
+        'An Event Place name must not be less than 10 characters',
+      ],
     },
     slug: String,
     maxSize: {
       type: Number,
-      required: [true, 'Event place must maximum number of people'],
+      required: [true, 'Event place must have maximum number'],
     },
     eventSuite: [String],
     description: {
@@ -33,6 +38,8 @@ const placeSchema = new mongoose.Schema(
     averageRatings: {
       type: Number,
       default: 4.5,
+      min: [1, 'Rating cannot be less than 1'],
+      max: [5, 'Ratings cannot exceed 5'],
     },
     ratingsQuantity: {
       type: Number,
@@ -42,7 +49,16 @@ const placeSchema = new mongoose.Schema(
       type: Number,
       required: [true, 'An Event place must have a price'],
     },
-    discount: Number,
+    discount: {
+      type: Number,
+      validate: {
+        validator: function (val) {
+          // nb: param val is the value that was entered
+          return val < this.price;
+        },
+        message: 'Discount ({VALUE}) cannot be greater than the actual price',
+      },
+    },
     location: String,
     booked: {
       type: Boolean,
@@ -60,6 +76,10 @@ const placeSchema = new mongoose.Schema(
     },
     start_date: Date,
     end_date: Date,
+    premiumPlace: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     toJSON: { virtuals: true },
@@ -77,9 +97,31 @@ placeSchema.pre('save', function (next) {
   next();
 });
 
-placeSchema.post('save', function (doc, next) {
-  console.log(doc);
-  // this.slug = slugify(this)
+// placeSchema.post('save', function (doc, next) {
+//   console.log(doc);
+//   next();
+// });
+
+//Using Query MiddleWare to detect premium Event Places for premium users
+placeSchema.pre(/^find/, function (next) {
+  // placeSchema.pre('find', function (next) {
+  this.find({ premiumPlace: { $ne: true } });
+
+  this.start = Date.now();
+  next();
+});
+
+placeSchema.post(/^find/, function (doc, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`);
+
+  next();
+});
+
+//middle before executing any aggregate query
+placeSchema.pre('aggregate', function (next) {
+  this.pipeline().unshift({ $match: { premiumPlace: { $ne: true } } });
+
+  console.log(this.pipeline());
   next();
 });
 const Place = mongoose.model('Place', placeSchema);
