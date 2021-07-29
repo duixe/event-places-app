@@ -1,5 +1,6 @@
 const Place = require('../models/eventPlaceModel');
 const APIFeatures = require('../utils/placesAPIFeature');
+const catchAsync = require('../utils/catchAsync');
 
 exports.aliasTopPlaces = (req, res, next) => {
   req.query.limit = 10;
@@ -52,23 +53,16 @@ exports.getPlace = async (req, res) => {
   }
 };
 
-exports.createPlace = async (req, res) => {
-  try {
-    const newEventPlace = await Place.create(req.body);
+exports.createPlace = catchAsync(async (req, res, next) => {
+  const newEventPlace = await Place.create(req.body);
 
-    res.status(201).json({
-      status: 'success',
-      data: {
-        places: newEventPlace,
-      },
-    });
-  } catch (err) {
-    res.status(400).json({
-      status: 'fail',
-      message: err,
-    });
-  }
-};
+  res.status(201).json({
+    status: 'success',
+    data: {
+      places: newEventPlace,
+    },
+  });
+});
 
 exports.updatePlace = async (req, res) => {
   try {
