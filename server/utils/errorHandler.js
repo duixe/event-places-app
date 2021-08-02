@@ -1,3 +1,22 @@
+const ErrorSetter = require('./ErrorSetter');
+
+const sanitizeCastErrorByDB = (error) => {
+  const message = `Invalid ${error.path}: ${error.value}`;
+  return new ErrorSetter(message, 400);
+};
+
+const sanitizeDuplicateFieldsByDB = (error) => {
+  const value = error.errmsg.match(/(["'])(\\?.)*?\1/)[0];
+  const message = `Dupliate field value: ${value}, kindly use a different value`;
+  return new ErrorSetter(message, 400);
+};
+
+const sanitizeValidationErrorByDB = (error) => {
+  const errors = Object.values(error.errors).map((el) => el.message);
+  const message = `Invalid input data. ${errors.join('. ')}`;
+  return new ErrorSetter(message, 400);
+};
+
 const sendDevErrors = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -31,7 +50,14 @@ module.exports = (err, req, res, next) => {
   // amount of errors to expose based on the env
   if (process.env.NODE_ENV === 'development') {
     sendDevErrors(err, res);
-  } else if (process.env.NODE_ENV === 'development') {
-    sendProdErrors(err, res);
+  } else if (process.env.NODE_ENV === 'production') {
+    // Handle mongoDB err
+    let error = err;
+    if (error.name === 'ValidationError')
+      error = sanitizeValidationErrorByDB(error);
+    if (error.name === 'CastError') error = sanitizeCastErrorByDB(error);
+    if (error.code === 11000) error = sanitizeDuplicateFieldsByDB(error);
+
+    sendProdErrors(error, res);
   }
 };
