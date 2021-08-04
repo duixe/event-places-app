@@ -17,6 +17,12 @@ const sanitizeValidationErrorByDB = (error) => {
   return new ErrorSetter(message, 400);
 };
 
+const sanitizeErrorByJwt = () =>
+  new ErrorSetter('Invalid Token, kindly login again', 401);
+
+const sanitizeExpiredErrorByJwt = () =>
+  new ErrorSetter('Your token has expired, kindly login again', 401);
+
 const sendDevErrors = (err, res) => {
   res.status(err.statusCode).json({
     status: err.status,
@@ -35,7 +41,6 @@ const sendProdErrors = (err, res) => {
     });
     // error cause by a bug
   } else {
-    console.error('Error', err);
     res.status(500).json({
       status: 'error',
       message: 'something went wrong!',
@@ -56,6 +61,8 @@ module.exports = (err, req, res, next) => {
     if (error.name === 'ValidationError')
       error = sanitizeValidationErrorByDB(error);
     if (error.name === 'CastError') error = sanitizeCastErrorByDB(error);
+    if (error.name === 'JsonWebTokenError') error = sanitizeErrorByJwt();
+    if (error.name === 'TokenExpiredError') error = sanitizeExpiredErrorByJwt();
     if (error.code === 11000) error = sanitizeDuplicateFieldsByDB(error);
 
     sendProdErrors(error, res);
