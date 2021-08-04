@@ -1,5 +1,6 @@
 const express = require('express');
 const eventPlaceController = require('../controllers/eventPlaceController');
+const guard = require('../middleware/guardRoutes');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.route('/place-stats').get(eventPlaceController.getPlaceStats);
 
 router
   .route('/')
-  .get(eventPlaceController.getAllPlaces)
+  .get(guard.guardRoute, eventPlaceController.getAllPlaces)
   .post(eventPlaceController.createPlace);
 
 router

@@ -11,8 +11,10 @@
   "author": "Emmanuel Sunday Akomaning",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.2",
     "morgan": "^1.10.0",
     "slugify": "^1.6.0"
@@ -26,7 +28,8 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^3.4.0",
     "eslint-plugin-react": "^7.24.0",
-    "prettier": "^2.3.2"
+    "prettier": "^2.3.2",
+    "validator": "^13.6.0"
   },
   "engines": {
     "node": ">=10.16.3"

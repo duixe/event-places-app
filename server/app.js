@@ -19,7 +19,6 @@ app.use(express.json());
 //👇 this middleware is called only when there is a request
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
-  console.log(x);
   next();
 });
 
