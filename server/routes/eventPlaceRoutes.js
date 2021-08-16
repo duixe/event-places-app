@@ -22,6 +22,10 @@ router
   .route('/:id')
   .get(eventPlaceController.getPlace)
   .patch(eventPlaceController.updatePlace)
-  .delete(eventPlaceController.deletePlace);
+  .delete(
+    guard.guardRoute,
+    guard.restrictTo('admin'),
+    eventPlaceController.deletePlace
+  );
 
 module.exports = router;

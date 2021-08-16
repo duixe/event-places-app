@@ -1,3 +1,4 @@
+/* eslint-disable arrow-body-style */
 const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
@@ -50,3 +51,18 @@ exports.guardRoute = catchAsync(async (req, res, next) => {
   req.user = extractedUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, _res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new ErrorSetter(
+          'Sorry, you do not have enough permission to perform this action',
+          403
+        )
+      );
+    }
+
+    next();
+  };
+};
