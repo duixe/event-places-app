@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const catchAsync = require('../utils/catchAsync');
@@ -102,4 +103,55 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
     );
   }
 });
-exports.resetPassword = (req, res, next) => {};
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  //Extract user based on token from the request
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new ErrorSetter('Token has Expired or Invalid', 400));
+  }
+  user.password = req.body.password;
+  user.confirm_password = req.body.confirm_password;
+  user.passwordResetToken = undefined;
+  user.passwordExpired = undefined;
+  await user.save();
+
+  const token = generateToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
+
+exports.changePassword = catchAsync(async (req, res, next) => {
+  //extract user from collection using id from the req NB: req.user.id is
+  //extracted from the guard.guardroutes middleware
+  const user = await User.findById(req.user.id).select('+password');
+
+  //compare previous passwords
+  if (!(await user.checkPassword(req.body.current_password, user.password))) {
+    return next(new ErrorSetter('Your current password is wrong', 401));
+  }
+
+  //update password if comparison returns true
+  user.password = req.body.password;
+  user.confirm_password = req.body.confirm_password;
+  await user.save();
+
+  const token = generateToken(user._id);
+
+  res.status(200).json({
+    status: 'success',
+    token,
+  });
+});
