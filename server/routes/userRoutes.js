@@ -18,6 +18,8 @@ router.patch(
   authController.changePassword
 );
 
+router.patch('/update-profile', guard.guardRoute, userController.updateProfile);
+
 router
   .route('/')
   .get(userController.getAllUsers)
