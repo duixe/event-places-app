@@ -49,6 +49,11 @@ const userSchema = mongoose.Schema(
         message: 'passwords do not match',
       },
     },
+    active: {
+      type: Boolean,
+      default: true,
+      select: false,
+    },
     passwordChangedAt: Date,
     passwordResetToken: String,
     passwordResetExpires: Date,
@@ -81,6 +86,11 @@ userSchema.pre('save', function (next) {
   next();
 });
 
+userSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
 userSchema.methods.PasswordchangedAfter = function (jwtTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
@@ -88,7 +98,7 @@ userSchema.methods.PasswordchangedAfter = function (jwtTimestamp) {
       10
     );
     return jwtTimestamp < changedTimestamp;
-    console.log(jwtTimestamp);
+    // console.log(jwtTimestamp);
   }
   return false;
 };

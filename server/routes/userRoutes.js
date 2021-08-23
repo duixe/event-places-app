@@ -19,6 +19,11 @@ router.patch(
 );
 
 router.patch('/update-profile', guard.guardRoute, userController.updateProfile);
+router.delete(
+  '/deactivate-account',
+  guard.guardRoute,
+  userController.deactivateAccount
+);
 
 router
   .route('/')
